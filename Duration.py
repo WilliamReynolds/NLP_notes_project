@@ -4,6 +4,13 @@ import datetime
 import matplotlib.pyplot as plt
 import nltk
 import re
+import pickle
+
+with open('SubjectsWithPain', 'rb') as fp:
+		SubjectWithPain = pickle.load(fp)
+
+with open('SubjectsWithoutPain', 'rb') as fp:
+		SubjectWithoutPain = pickle.load(fp)
 
 def lengthTime(dateArray):
 	if (len(dateArray) > 1):
@@ -25,9 +32,12 @@ def lengthTime(dateArray):
 
 def makeNotesLength():
 	outputTimeArray=[]
+	PainOutputTimeArray=[]
+	NoPainOutputTimeArray=[]
 	count =0 
 	for dir, sub, files in os.walk(".\\"):
 		if (len(dir) == 11):
+			subjectID = dir[2:11]
 			os.chdir(dir)
 			for dirs, sub, files in os.walk(os.getcwd()):
 				dateArray = []
@@ -47,18 +57,26 @@ def makeNotesLength():
 				if (len(dateArray) > 1):
 					totalTime = lengthTime(dateArray)
 					outputTimeArray.append(totalTime)
+					if (subjectID in SubjectWithPain):
+						PainOutputTimeArray.append(totalTime)
+					else:
+						NoPainOutputTimeArray.append(totalTime)
+
 				file.close()
 				os.chdir('..')
 	  
 		count = count + 1
-	return outputTimeArray
+	return outputTimeArray, PainOutputTimeArray, NoPainOutputTimeArray
 
 def makeStayLength():
 	outputTimeArray=[]
+	PainOutputTimeArray=[]
+	NoPainOutputTimeArray=[]
 	count =0 
 	for dir, sub, files in os.walk(".\\"):
 		if (len(dir) == 11):
 			os.chdir(dir)
+			subjectID = dir[2:11]
 			for dirs, sub, files in os.walk(os.getcwd()):
 				dateArray = []
 				filePosition = 0
@@ -92,11 +110,16 @@ def makeStayLength():
 				if (len(dateArray) > 1):
 					totalTime = lengthTime(dateArray)
 					outputTimeArray.append(totalTime)
+					if (subjectID in SubjectWithPain):
+						PainOutputTimeArray.append(totalTime)
+					else:
+						NoPainOutputTimeArray.append(totalTime)
+
 				file.close()
 				os.chdir('..')
 	  
 		count = count + 1
-	return outputTimeArray
+	return outputTimeArray, PainOutputTimeArray, NoPainOutputTimeArray
 
 
 
@@ -107,6 +130,8 @@ def average(timeList):
 		num = num + 1
 		sum = sum + i
 	print("Subjects: ",num)
+	print("MaxDuration: ",max(timeList))
+	print("MinDuration: ",min(timeList))
 
 	if (num == 0):
 		return 1
@@ -118,7 +143,7 @@ def average(timeList):
 
 #print("\nAverage Stay is " + str(listAverage) + " days.")
 
-def plotAscendingLON(timeList):
+def plotAscendingLON(timeList, name):
 	avg = average(timeList)
 	print(avg)
 	timeList.sort()
@@ -134,12 +159,12 @@ def plotAscendingLON(timeList):
 	plt.ylabel('Duration of Notes (days)', fontsize=15)
 	plt.legend([blueDot, redDot, avgLine], ['Below Average', 'Above Average', 'Average: '+str(avg) + ' days'])
 
-	plt.savefig('AscendingDurationOfNotes.png')
+	plt.savefig(name+'.png')
 	#plt.show()
 	plt.clf()
 
 
-def plotAscendingLOS(timeList):
+def plotAscendingLOS(timeList, name):
 	avg = average(timeList)
 	print(avg)
 	timeList.sort()
@@ -155,12 +180,19 @@ def plotAscendingLOS(timeList):
 	plt.ylabel('Duration of Stay (days)', fontsize=15)
 	plt.legend([blueDot, redDot, avgLine], ['Below Average', 'Above Average', 'Average: '+str(avg) + ' days'])
 
-	plt.savefig('AscendingDurationOfStay.png')
+	plt.savefig(name+'.png')
 	#plt.show()
 	plt.clf()
 
 #LoN = makeNotesLength()
 #LoS = makeStayLength()
+LON, PLON, NPLON = makeNotesLength()
+LOS, PLOS, NPLOS = makeStayLength()
 
-plotAscendingLON(makeNotesLength())
-plotAscendingLOS(makeStayLength())
+plotAscendingLON(LON, 'LengthofNotes')
+plotAscendingLON(PLON, 'PainLengthofNotes')
+plotAscendingLON(NPLON, 'NoPainLengthofNotes')
+
+plotAscendingLOS(LOS, 'LengthofStay')
+plotAscendingLOS(PLOS, 'PainLengthofStay')
+plotAscendingLOS(NPLOS, 'NoPainLengthofStay')

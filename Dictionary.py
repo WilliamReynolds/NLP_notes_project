@@ -203,9 +203,124 @@ def createIndividualCorpus():
 				pickle.dump(cleanedCorpous, fp)
 			os.chdir('..')
 
+def ReturnIndividualCorpus():
+	count =0 
+	dirCount=0
+	fileCount=0
+	corpus = ""
+
+	for dir2, sub2, files2 in os.walk(os.getcwd()):
+		for f in files2:
+			file = open(f, "r")
+			NumLines = sum(1 for line in open(f))
+			lineNumber = 0
+			while lineNumber <= NumLines:
+				# first 10 lines of file are useless header info
+				if (lineNumber <= 10):
+					file.readline()
+				else:
+					# create line and iterate through seperating punctuation. 
+					line = file.readline().strip().lower()
+					splits = [':', ',', '.', '/', '-', '[', ']', '(', ')', '\'', '"', '.', '_' ]
+					lineSplit = [line]
+					for s in splits:
+						for l in lineSplit:
+							if (len(l.split(s)) > 1):
+								for v in (l.split(s)):
+									lineSplit.append(v)
+								lineSplit.remove(l)
+					
+					# adds the newly seperated texts to the corpus
+					for l in lineSplit:
+						corpus = corpus + l + " "
+
+				lineNumber = lineNumber + 1
+			file.close()
+
+	# steps to clean and normalize
+	stopWords = set(stopwords.words('english'))
+	cleanedCorpous = []
+	tokenCorpus = nltk.tokenize.word_tokenize(corpus)
+	lemmatizer = WordNetLemmatizer()
+
+	#creating a cleaned up corpus
+	for w in tokenCorpus:
+		w = lemmatizer.lemmatize(w)
+		if w not in stopWords:
+			if w not in cleanedCorpous:
+				if w.isalpha():
+					cleanedCorpous.append(w)
+
+	# more cleaning, removal using regex as re. 
+	patterns = ['.*\/.*', '.*\:,*', '.*\d.*', '.*\~.*', '.*[0-9].*', '\'' ]
+	for p in patterns:
+		for w in cleanedCorpous:
+			if (re.match(p, w)):
+				cleanedCorpous.remove(w)
+
+		for w in cleanedCorpous:
+			if (re.match('.*\d.*', w)):
+				cleanedCorpous.remove(w)
+
+		for w in cleanedCorpous:
+			if (re.match('.*\..*', w)):
+				cleanedCorpous.remove(w)
+		
+		for w in cleanedCorpous:
+			if (re.match('"', w)):
+				cleanedCorpous.remove(w)  
+
+		# to remove seperated out dates and random lettering that won't mean anything
+		for w in cleanedCorpous:
+			if (len(w) < 3):
+				cleanedCorpous.remove(w)                
 			
+	cleanedCorpous.sort()
+	return cleanedCorpous
+			
+def ReturnUnstructuredCorpus():
+	count =0 
+	dirCount=0
+	fileCount=0
+	corpus = ""
+
+	for dir2, sub2, files2 in os.walk(os.getcwd()):
+		for f in files2:
+			file = open(f, "r")
+			NumLines = sum(1 for line in open(f))
+			lineNumber = 0
+			while lineNumber <= NumLines:
+				# first 10 lines of file are useless header info
+				if (lineNumber <= 10):
+					file.readline()
+				else:
+					# create line and iterate through seperating punctuation. 
+					line = file.readline().strip().lower()
+					splits = [':', ',', '.', '/', '-', '[', ']', '(', ')', '\'', '"', '.', '_' ]
+					lineSplit = [line]
+					for s in splits:
+						for l in lineSplit:
+							if (len(l.split(s)) > 1):
+								for v in (l.split(s)):
+									lineSplit.append(v)
+								lineSplit.remove(l)
+					
+					# adds the newly seperated texts to the corpus
+					for l in lineSplit:
+						corpus = corpus + l + " "
+
+				lineNumber = lineNumber + 1
+			file.close()
+
+		tokenCorpus = nltk.tokenize.word_tokenize(corpus)
+		return tokenCorpus
 
 
+def CohortCorpus():
+	cleanedCorpous = createCohortCorpus()
+	with open('Corpus_Dictionary_outfile', 'wb') as fp:
+			pickle.dump(cleanedCorpous, fp)
 
-#createCohortCorpus()
-createIndividualCorpus()
+def SubjectCorpus():
+	createIndividualCorpus()
+	
